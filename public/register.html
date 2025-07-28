@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>用户注册</title>
+  <style>
+    body {
+      background-image: url("background.jpg");
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      width: 400px;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 40px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    select {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #4a90e2;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #3880e0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>用户注册</h1>
+    <form action="/register" method="post">
+      <input type="text" name="username" placeholder="用户名" required>
+      <span id="username-error" class="error-message"></span>
+      <input type="password" name="password" placeholder="密码" required>
+      <input type="password" name="confirmPassword" placeholder="确认密码" required>
+      <select name="role" required>
+        <option value="">选择角色</option>
+        <option value="user">用户</option>
+        <option value="admin">管理员</option>
+        <option value="agent">中介</option>
+      </select>
+      <button type="submit">注册</button>
+    </form>
+  </div>
+  <script>
+    const usernameInput = document.querySelector('input[name="username"]');
+    const usernameError = document.getElementById('username-error');
+
+    usernameInput.addEventListener('blur', () => {
+      const username = usernameInput.value.trim();
+      if (username !== '') {
+        fetch('/checkUsername', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username })
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.exists) {
+              usernameError.textContent = '用户名已存在';
+            } else {
+              usernameError.textContent = '';
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css">
+  <!-- <script type="text/javascript" src="../app.js"></script> -->
+  <style>
+    body {
+      background-image: url('background.jpg');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    h1{
+      text-align: center;
+    }
+    .container {
+      width: 300px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+  
+    .form-control {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  
+    .btn-primary {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>登录</h1>
+    <form action="/login" method="post">
+      <div class="form-group">
+        <label for="username">用户名:</label>
+        <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">密码:</label>
+        <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+      </div>
+      <div class="form-group">
+        <label>角色:</label>
+        <div class="btn-group" data-toggle="buttons">
+          <label class="btn btn-outline-primary">
+            <input type="radio" name="role" value="user" required> User
+          </label>
+          <label class="btn btn-outline-primary">
+            <input type="radio" name="role" value="admin" required> Admin
+          </label>
+          <label class="btn btn-outline-primary">
+            <input type="radio" name="role" value="agent" required> Agent
+          </label>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">登录</button>
+    </form>
+    <!-- <% if (errorMessage) { %>
+      <div class="alert alert-danger" role="alert">
+        <%= errorMessage %>
+      </div>
+    <% } %> -->
+    <a href="register.html">没有账号，请注册</a>
+  </div>
+  
+  
+  
+</body>
+</html>
+

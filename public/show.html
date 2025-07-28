@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>show</title>
+    <link href="layui.css" rel="stylesheet">
+    <script src="layui.js"></script>
+</head>
+
+<body>
+    <span class="layui-breadcrumb">
+        <a href="welcome.html">首页</a>
+        <a href="">房源</a>
+        <a><cite>查看房源</cite></a>
+    </span>
+    <div class="layui-tab layui-tab-brief" style="background-color: #fff">
+        <ul class="layui-tab-title">
+            <li class="layui-this" >2D地图</li>
+            <li>3D地图</li>
+        </ul>
+        <div class="layui-tab-content" style="height:500px">
+            <div class="layui-tab-item layui-show">
+                <iframe src="show-2d.html" frameborder="0"></iframe>
+            </div>
+            <div class="layui-tab-item">
+                <iframe src="3D/test.html" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+</body>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+    }
+    iframe{
+    width: 100%;
+    height: 500px;
+}
+</style>
+
+</html>

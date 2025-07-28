@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+<head>
+    <link href="layui.css" rel="stylesheet">
+    <script src="layui.js"></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+
+    <title>地图显示</title>
+    <script src="https://a.amap.com/jsapi_demos/static/demo-center/js/demoutils.js"></script>
+    <!-- 加载地图JSAPI脚本 -->
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+            securityJsCode: '9152a94782732ae16385e746bb7a12d3',
+        }
+    </script>
+    <script type="text/javascript"
+        src="https://webapi.amap.com/maps?v=2.0&key=f2d196ccac21f1459da440f8abdc0eb0&plugin=AMap.Scale,AMap.ToolBar,AMap.GeoJSON,AMap.PlaceSearch,AMap.AutoComplete,AMap.Geocoder,AMap.ArrivalRange,AMap.Transfer"></script>
+    <script type="text/javascript"
+        src="https://webapi.amap.com/loca?v=2.0&key=f2d196ccac21f1459da440f8abdc0eb0"></script>
+    <script type="text/javascript" src="https://cache.amap.com/lbs/static/addToolbar.js"></script>
+
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 10px;
+        }
+
+        #container {
+            width: 100%;
+            height: 90%;
+        }
+
+        .control-panel {
+            position: absolute;
+            top: 30px;
+            right: 20px;
+        }
+
+        .control-entry {
+            width: 280px;
+            background-color: white;
+            font-family: fantasy, sans-serif;
+            text-align: left;
+            color: #16baaa;
+            overflow: auto;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <span class="layui-breadcrumb">
+        <a href="../welcome.html">首页</a>
+        <a href="">房源</a>
+        <a><cite>空间查询</cite></a>
+    </span>
+
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md8">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    <h2>空间查询</h2>
+                </div>
+                <div class="layui-card-body" style="height: 500px">
+                    <div id="container"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md4">
+            <div class="layui-card">
+                <div class="layui-card-body" style="height: 500px">
+                    <div id="control-panel">
+                        <div>
+                            <button type="submit" class="layui-btn layui-btn-radius" value="加载数据" onclick="dataload()">加载数据</button>
+                        </div>
+                        <div class="control-entry">
+                            <label for="work-location" style="font-size: 15px;">选择工作地点：</label>
+                            <div class="control-input">
+                                <input id="worklocation" type="text">
+                            </div>
+                        </div>
+                        <div id="transfer-panel"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="SpatialQuery.js"></script>
+</body>
+</html>

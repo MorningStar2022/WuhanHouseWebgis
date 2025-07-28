@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>房源统计可视化</title>
+  <!-- 引入 ECharts 库 -->
+  <script src="echarts.min.js"></script>
+  <link href="layui.css" rel="stylesheet">
+  <script src="layui.js"></script>
+</head>
+<style>
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    padding: 10px;
+  }
+  </style>
+
+<body>
+  <span class="layui-breadcrumb">
+    <a href="welcome.html">首页</a>
+    <a href="">房源</a>
+    <a><cite>图表统计</cite></a>
+  </span>
+
+  <div class="layui-card">
+    <div class="layui-card-header">
+      <h2>图表统计展示</h2>
+    </div>
+    <div class="layui-card-body" style="height: 500px;">
+      <!-- 创建一个容器用于渲染 ECharts 图表 -->
+      <div id="chart-container1" style="width: 50%; height: 400px; float: left;"></div>
+      <div id="chart-container2" style="width: 50%; height: 400px; float: left;"></div>
+    </div>
+  </div>
+
+
+  <script src="https://openlayers.org/en/v6.5.0/build/ol.js"></script>
+  <script>
+    // 在这里编写 JavaScript 代码
+    // 读取行政区的 GeoJSON 数据
+    fetch('https://geo.datav.aliyun.com/areas_v3/bound/420100_full.json')
+      .then(response => response.json())
+      .then(districtsData => {
+        // 读取房源数据的 GeoJSON
+        fetch('二手房源数据.json')
+          .then(response => response.json())
+          .then(housingData => {
+            const districtCountMap = new Map();
+            const districtPriceMap = new Map();
+
+            // 创建行政区的 GeoJSON 解析器
+            const districtFormat = new ol.format.GeoJSON();
+            const districtFeatures = districtFormat.readFeatures(districtsData);
+
+            // 创建房源数据的 GeoJSON 解析器
+            const housingFormat = new ol.format.GeoJSON();
+            const housingFeatures = housingFormat.readFeatures(housingData);
+
+            // 创建行政区的矢量图层
+            const districtLayer = new ol.layer.Vector({
+              source: new ol.source.Vector({
+                features: districtFeatures
+              })
+            });
+
+            housingFeatures.forEach(housingFeature => {
+              const housingGeometry = housingFeature.getGeometry();
+              const housingCoordinates = housingGeometry.getCoordinates();
+
+              districtLayer.getSource().forEachFeatureIntersectingExtent(housingGeometry.getExtent(), districtFeature => {
+                const districtName = districtFeature.get('name');
+                const housingPrice = parseFloat(housingFeature.get('价格'));
+
+                if (districtCountMap.has(districtName)) {
+                  districtCountMap.set(districtName, districtCountMap.get(districtName) + 1);
+                  districtPriceMap.set(districtName, districtPriceMap.get(districtName) + housingPrice);
+                } else {
+                  districtCountMap.set(districtName, 1);
+                  districtPriceMap.set(districtName, housingPrice);
+                }
+              });
+            });
+
+            // 计算每个行政区的平均房价
+            const districtAveragePriceMap = new Map();
+            districtPriceMap.forEach((price, district) => {
+              const count = districtCountMap.get(district);
+              const averagePrice = price / count;
+              districtAveragePriceMap.set(district, averagePrice);
+            });
+
+            // 将统计结果转换为 ECharts 所需的数据格式
+            const countChartData = Array.from(districtCountMap, ([district, count]) => ({ name: district, value: count }));
+            const priceChartData = Array.from(districtAveragePriceMap, ([district, averagePrice]) => ({
+              name: district,
+              value: averagePrice.toFixed(2) // 保留两位小数
+            }));
+
+            // 使用 ECharts 进行可视化
+            const countChart = echarts.init(document.getElementById('chart-container1'), 'dark');
+            const countOption = {
+              title: {
+    left: 'center',
+    text: '各行政区对应房源数量图'
+  },
+              xAxis: {
+                type: 'category',
+                name: '行政区',
+                axisTick: { alignWithLabel: true },
+                data: countChartData.map(item => item.name),
+                axisLabel: { rotate: 45 }
+              },
+              yAxis: { type: 'value', name: '数量/个' },
+              series: [{
+                type: 'bar',
+                data: countChartData.map(item => item.value),
+                emphasis: {
+                  itemStyle: {
+                    color: 'red' // 设置高亮显示的颜色
+                  }
+                },
+                label: {
+                  show: true,
+                  position: 'top', // 在柱状图上方显示数值
+                  formatter: '{c}', // 显示 y 轴的值
+                  textStyle: {
+                    color: 'white', // 数值的颜色
+                    fontWeight: 'bold' // 数值的字体粗细
+                  }
+                }
+              }]
+            };
+            countChart.setOption(countOption);
+
+            const priceChart = echarts.init(document.getElementById('chart-container2'));
+            const priceOption = {
+              title: {
+    left: 'center',
+    text: '各行政区房价均值'
+  },
+              xAxis: {
+                type: 'category',
+                data: priceChartData.map(item => item.name),
+                name: '行政区',
+                axisTick: { alignWithLabel: true },
+                axisLabel: { rotate: 45 }
+              },
+              yAxis: { type: 'value', name: '均价/万元' },
+              series: [{
+                type: 'line', data: priceChartData.map(item => item.value),
+                label: {
+                  show: true,
+                  position: 'top', // 在柱状图上方显示数值
+                  formatter: '{c}', // 显示 y 轴的值
+                  textStyle: {
+                    color: 'black', // 数值的颜色
+                    fontWeight: 'bold' // 数值的字体粗细
+                  }
+                }
+              }]
+            };
+            priceChart.setOption(priceOption);
+          })
+          .catch(error => {
+            console.error('Failed to load housing data JSON file:', error);
+          });
+      })
+      .catch(error => {
+        console.error('Failed to load districts JSON file:', error);
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://openlayers.org/en/v6.5.0/css/ol.css" type="text/css">
+  <link href="layui.css" rel="stylesheet">
+  <script src="layui.js"></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    #navPanel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 20%;
+      height: 100%;
+      background-color: #f4f4f4;
+      padding: 10px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+
+    #map-container {
+      position: absolute;
+      top: 0;
+      left: 10px;
+      right: 10px;
+      /* 右侧五分之四 */
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .ol-popup {
+      position: absolute;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 20px;
+      border-radius: 5px;
+      border: 2px solid #333;
+      font-size: 16px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      width: 250px;
+      /* 设置宽度 */
+      white-space: pre-line;
+      /* 允许文本换行 */
+    }
+
+    .ol-popup h2 {
+      margin-top: 0;
+      /* 去除标题的上边距 */
+    }
+
+    .ol-popup p {
+      margin: 0;
+      /* 去除段落的上下边距 */
+    }
+
+
+    #search-container {
+      position: absolute;
+      top: 10px;
+      left: 50px;
+      width: 200px;
+      /* 搜索框容器样式 */
+    }
+
+    #search-input {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 5px;
+      /* 搜索框样式 */
+    }
+
+
+  </style>
+</head>
+
+<body>
+  <div id="map-container">
+
+    <div id="map"></div>
+    <div id="search-container">
+      <input type="text" id="search-input" placeholder="输入关键字进行搜索">
+      <button class="layui-btn layui-btn-radius" id="search-button">搜索</button>
+    </div>
+  </div>
+
+  <div id="popup" class="ol-popup">
+    <div id="popup-content"></div>
+  </div>
+  <script src="https://openlayers.org/en/v6.5.0/build/ol.js"></script>
+  <script>
+
+    // JavaScript code goes here
+    var map = new ol.Map({
+      target: 'map',
+      view: new ol.View({
+        center: ol.proj.fromLonLat([114.3055, 30.5928]),
+        zoom: 10
+      }),
+      layers: [
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        })
+      ]
+    });
+    // Create a vector source and layer
+    var districtSource = new ol.source.Vector({
+      url: "https://geo.datav.aliyun.com/areas_v3/bound/420100_full.json",
+      format: new ol.format.GeoJSON()
+    });
+    var districtLayer = new ol.layer.Vector({
+      source: districtSource,
+      style: new ol.style.Style({
+        stroke: new ol.style.Stroke({
+          color: 'red',
+          width: 2
+        }), fill: new ol.style.Fill({
+          color: 'rgba(255, 0, 0, 0.3)'
+        })
+      })
+    });
+
+    // Add the vector layer to the map
+    map.addLayer(districtLayer);
+
+
+    var highlightedFeature = null;
+    map.on('pointermove', function (event) {
+      var pixel = event.pixel;
+      var feature = map.forEachFeatureAtPixel(pixel, function (feature) {
+        return feature;
+      });
+
+      if (feature !== highlightedFeature) {
+        // 鼠标移入了新的行政区
+        if (highlightedFeature) {
+          // 恢复原来高亮行政区的样式
+          highlightedFeature.setStyle(new ol.style.Style({
+            stroke: new ol.style.Stroke({
+              color: 'red',
+              width: 2
+            }),
+            fill: new ol.style.Fill({
+              color: 'rgba(255, 0, 0, 0.3)'
+            })
+          }));
+        }
+
+        if (feature && feature.getGeometry().getType() === 'MultiPolygon') {
+          // 鼠标移入行政区时，设置新行政区的样式
+          feature.setStyle(new ol.style.Style({
+            stroke: new ol.style.Stroke({
+              color: 'blue',
+              width: 2
+            }),
+            fill: new ol.style.Fill({
+              color: 'rgba(0, 0, 255, 0.3)'
+            })
+          }));
+
+          // 更新当前高亮行政区
+          highlightedFeature = feature;
+        } else {
+          // 鼠标移出行政区时，恢复默认样式
+          highlightedFeature = null;
+        }
+      }
+    });
+
+
+    fetch('二手房源数据.json')
+      .then(response => response.json())
+      .then(data => {
+        const features = data.features.map(feature => {
+          const coordinates = feature.geometry.coordinates;
+          const point = new ol.geom.Point(ol.proj.fromLonLat(coordinates));
+          // const point = new ol.geom.Point(coordinates);
+          const featureObject = new ol.Feature(point);
+          featureObject.setProperties(feature.properties);
+          return featureObject;
+        });
+
+        const source = new ol.source.Vector({
+          features: features
+        });
+
+        const layer = new ol.layer.Vector({
+          source: source,
+          style: new ol.style.Style({
+            image: new ol.style.Circle({
+              radius: 6,
+              fill: new ol.style.Fill({ color: 'blue' }),
+              stroke: new ol.style.Stroke({ color: 'white', width: 2 })
+            })
+          })
+        });
+
+        map.addLayer(layer);
+        // 创建一个 Overlay 元素用于显示弹窗
+        const overlay = new ol.Overlay({
+          element: document.getElementById('popup'),
+          positioning: 'bottom-center',
+          offset: [0, -10],
+          stopEvent: false
+        });
+        map.addOverlay(overlay);
+
+        // 监听鼠标移动事件
+        map.on('pointermove', function (event) {
+          if (event.dragging) {
+            return;
+          }
+
+          const pixel = map.getEventPixel(event.originalEvent);
+          const feature = map.forEachFeatureAtPixel(pixel, function (feature) {
+            return feature;
+          });
+
+
+          if (feature && feature.getGeometry().getType() === 'Point') {
+            const geometry = feature.getGeometry();
+            const coordinate = geometry.getCoordinates();
+
+            // 设置弹窗的内容
+            const popupContent = document.getElementById('popup-content');
+            const properties = feature.getProperties();
+            const html = `
+          <div>
+            <strong>小区名:</strong> ${properties['小区名']}<br>
+            <strong>区域:</strong> ${properties['区域']}<br>
+            <strong>户型:</strong> ${properties['户型']}<br>
+            <strong>面积:</strong> ${properties['面积']}<br>
+            <strong>朝向:</strong> ${properties['朝向']}<br>
+            <strong>装修风:</strong> ${properties['装修风']}<br>
+            <strong>楼层:</strong> ${properties['楼层']}<br>
+            <strong>房屋类:</strong> ${properties['房屋类']}<br>
+            <strong>价格:</strong> ${properties['价格']}<br>
+            <a href="${properties['链接']}" target="_blank">详情链接</a>
+          </div>
+        `;
+            popupContent.innerHTML = html;
+
+            // 设置弹窗的位置并显示
+            overlay.setPosition(coordinate);
+            overlay.getElement().style.display = 'block';
+          }
+          else {
+            // 隐藏弹窗
+            overlay.getElement().style.display = 'none';
+          }
+        });
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const highlightStyle = new ol.style.Style({
+          image: new ol.style.Circle({
+            radius: 6,
+            fill: new ol.style.Fill({ color: 'yellow' }),
+            stroke: new ol.style.Stroke({ color: 'white', width: 2 })
+          })
+        })
+
+        // 定义高亮显示房源的函数
+        function highlightFeatures(features) {
+          // 清除之前的高亮显示
+          source.getFeatures().forEach(function (feature) {
+            feature.setStyle(null);
+          });
+
+          // 高亮显示新的房源
+          features.forEach(function (feature) {
+            feature.setStyle(highlightStyle);
+          });
+        }
+
+        function performSearch(keyword) {
+          // 遍历所有房源，根据关键字进行筛选
+          const matchedFeatures = features.filter(function (feature) {
+            const properties = feature.getProperties();
+            // 在这里根据关键字进行筛选，可以根据小区名称、区域名称等属性进行匹配
+            // 返回匹配的结果
+            return properties['小区名'].indexOf(keyword) !== -1 || properties['区域'].indexOf(keyword) !== -1;
+          });
+
+          // 高亮显示匹配的房源
+          highlightFeatures(matchedFeatures);
+        }
+
+
+        searchButton.addEventListener('click', function () {
+          const keyword = searchInput.value;
+          performSearch(keyword);
+        });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  </script>
+
+</body>
+
+</html>

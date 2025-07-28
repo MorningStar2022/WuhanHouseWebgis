@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="layui.js"></script>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="layui.css" rel="stylesheet">
+  <title>房源列表</title>
+  <style>
+    /* 外观美化样式 */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+
+    /* 文本居中样式 */
+    td {
+      text-align: center;
+    }
+
+    /* 查询框样式 */
+    .search-box-container {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      padding: 20px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      z-index: 9999;
+    }
+
+    .search-box-container.show {
+      display: block;
+    }
+
+    .search-box-container h2 {
+      text-align: center;
+    }
+
+    .search-box-container form {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .search-box-container input[type="text"],
+    .search-box-container input[type="number"] {
+      padding: 5px 10px;
+      margin-bottom: 5px;
+    }
+
+    .search-box-container button {
+      padding: 8px 20px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    .search-box-container button.cancel {
+      background-color: #dc3545;
+      margin-left: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* 上传框样式 */
+    .upload-formcontainer {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      padding: 20px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      z-index: 9999;
+    }
+
+    .upload-formcontainer.show {
+      display: block;
+    }
+
+    .upload-formcontainer h3 {
+      text-align: center;
+    }
+
+    .upload-formcontainer form {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .upload-formcontainer input[type="text"],
+    .upload-formcontainer input[type="number"] {
+      padding: 5px 8px;
+      margin-bottom: 5px;
+      margin-top: 6px;
+    }
+
+    .upload-formcontainer button {
+      padding: 8px 20px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    .upload-formcontainer button.cancel {
+      background-color: #dc3545;
+      margin-left: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .message-box {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      text-align: center;
+      z-index: 9999;
+    }
+
+    .message-box-content {
+      margin-bottom: 10px;
+    }
+
+    .message-box h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .message-box p {
+      margin: 0;
+      color: #555;
+    }
+
+    .message-box button {
+      padding: 8px 16px;
+      background-color: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <span class="layui-breadcrumb">
+    <a href="">首页</a>
+    <a href="">房源</a>
+    <a><cite>搜索房源</cite></a>
+  </span>
+  <div class="layui-card">
+    <div class="layui-card-header">
+      <h2>房源信息展示</h2>
+    </div>
+    <div class="layui-card-body" style="height: 500px;">
+      <button class="layui-btn layui-btn-primary layui-border-green layui-btn-radius" id="searchButton">查询</button>
+      <div class="search-box-container" id="searchBoxContainer">
+        <h2>筛选条件</h2>
+        <form id="searchForm">
+          <input type="text" name="community" placeholder="小区名">
+          <br>
+          <input type="number" name="priceMin" placeholder="最低价格">
+          <input type="number" name="priceMax" placeholder="最高价格">
+          <br>
+          <input type="text" name="layout" placeholder="户型">
+          <br>
+          <input type="text" name="area" placeholder="面积">
+          <br>
+          <button type="submit" class="button">查询</button>
+          <button type="button" class="cancel">取消</button>
+        </form>
+      </div>
+
+      <button id="uploadButton" class="layui-btn layui-btn-primary layui-border-green layui-btn-radius">上传房源</button>
+      <div id="messageBoxContainer"></div>
+      <!-- 上传房源表单 -->
+      <div id="uploadFormContainer" class="upload-formcontainer">
+        <h3>上传房源</h3>
+        <form id="uploadForm" method="POST" action="/upload">
+        
+
+          <label for="community">小区名：</label>
+          <input type="text" id="community" name="community" required><br>
+
+          <label for="area">区域：</label>
+          <input type="text" id="area" name="area" required><br>
+
+          <label for="layout">户型：</label>
+          <input type="text" id="layout" name="layout" required><br>
+
+          <label for="size">面积：</label>
+          <input type="text" id="size" name="size" required><br>
+
+          <label for="orientation">朝向：</label>
+          <input type="text" id="orientation" name="orientation" required><br>
+
+          <label for="decoration">装修风：</label>
+          <input type="text" id="decoration" name="decoration" required><br>
+
+          <label for="floor">楼层：</label>
+          <input type="text" id="floor" name="floor" required><br>
+
+          <label for="houseType">房屋类：</label>
+          <input type="text" id="houseType" name="houseType" required><br>
+
+          <label for="price">价格：</label>
+          <input type="text" id="price" name="price" required><br>
+
+          <label for="remark">备注：</label>
+          <input type="text" id="remark" name="remark" required><br>
+
+          <label for="link">链接：</label>
+          <input type="text" id="link" name="link" required><br>
+
+          <label for="latitude">经度：</label>
+          <input type="text" id="latitude" name="latitude" required><br>
+
+          <label for="longitude">纬度：</label>
+          <input type="text" id="longitude" name="longitude" required><br>
+
+          <button type="submit">上传</button>
+          <button id="cancelUploadButton" class="cancel">取消</button>
+
+        </form>
+      </div>
+      <table id="houseTable">
+        <thead>
+          <tr>
+            <th>小区名</th>
+            <th>区域</th>
+            <th>户型</th>
+            <th>面积</th>
+            <th>朝向</th>
+            <th>装修风</th>
+            <th>楼层</th>
+            <th>房屋类</th>
+            <th>价格</th>
+            <th>备注</th>
+            <th>链接</th>
+            <th>经度</th>
+            <th>纬度</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% houses.forEach(function(house) { %>
+            <tr>
+              <td>
+                <%= house.小区名 %>
+              </td>
+              <td>
+                <%= house.区域 %>
+              </td>
+              <td>
+                <%= house.户型 %>
+              </td>
+              <td>
+                <%= house.面积 %>
+              </td>
+              <td>
+                <%= house.朝向 %>
+              </td>
+              <td>
+                <%= house.装修风 %>
+              </td>
+              <td>
+                <%= house.楼层 %>
+              </td>
+              <td>
+                <%= house.房屋类 %>
+              </td>
+              <td>
+                <%= house.价格 %>
+              </td>
+              <td>
+                <%= house.备注 %>
+              </td>
+              <td><a href="<%= house.链接 %>" target="_blank">详情链接</a></td>
+              <td>
+                <%= house.经度 %>
+              </td>
+              <td>
+                <%= house.纬度 %>
+              </td>
+            </tr>
+            <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    // 获取DOM元素
+    const searchButton = document.getElementById('searchButton');
+    const searchBoxContainer = document.getElementById('searchBoxContainer');
+    const searchForm = document.getElementById('searchForm');
+    const houseTable = document.getElementById('houseTable');
+
+
+    // 点击查询按钮显示查询框
+    searchButton.addEventListener('click', () => {
+      searchBoxContainer.classList.add('show');
+    });
+
+    // 点击取消按钮隐藏查询框
+    document.querySelector('.cancel').addEventListener('click', () => {
+      searchBoxContainer.classList.remove('show');
+    });
+
+    // 提交表单进行筛选
+    searchForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const formData = new FormData(searchForm);
+      const searchParams = Object.fromEntries(formData.entries());
+
+      // 发送POST请求，向服务器获取筛选结果
+      fetch('/houses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(searchParams)
+      })
+        .then(response => response.json())
+        .then(data => {
+          // 清空房源列表
+          houseTable.querySelector('tbody').innerHTML = '';
+
+          // 根据返回的结果重新渲染房源列表
+          data.forEach(house => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+            <td>${house.小区名}</td>
+            <td>${house.区域}</td>
+            <td>${house.户型}</td>
+            <td>${house.面积}</td>
+            <td>${house.朝向}</td>
+            <td>${house.装修风}</td>
+            <td>${house.楼层}</td>
+            <td>${house.房屋类}</td>
+            <td>${house.价格}</td>
+            <td>${house.备注}</td>
+            <td><a href="${house.链接}" target="_blank">详情链接</a></td>
+            <td>${house.经度}</td>
+            <td>${house.纬度}</td>
+            `;
+            houseTable.querySelector('tbody').appendChild(row);
+          });
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+
+      // 隐藏查询框
+      searchBoxContainer.classList.remove('show');
+    });
+
+    // 获取DOM元素
+    const uploadButton = document.getElementById('uploadButton');
+    const uploadFormContainer = document.getElementById('uploadFormContainer');
+    const uploadForm = document.getElementById('uploadForm');
+    const messageBoxContainer = document.getElementById('messageBoxContainer');
+
+    // 点击上传按钮显示上传框
+    uploadButton.addEventListener('click', () => {
+      uploadFormContainer.classList.add('show');
+    });
+
+    // 点击取消按钮隐藏上传框
+    document.getElementById('cancelUploadButton').addEventListener('click', () => {
+      uploadFormContainer.classList.remove('show');
+    });
+
+
+    // 提交表单进行上传
+    uploadForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      // 获取表单数据
+      const formData = new FormData(uploadForm);
+      const houseData = {
+        小区名: formData.get('community'),
+        区域: formData.get('area'),
+        户型: formData.get('layout'),
+        面积: formData.get('size'),
+        朝向: formData.get('orientation'),
+        装修风: formData.get('decoration'),
+        楼层: formData.get('floor'),
+        房屋类: formData.get('houseType'),
+        价格: formData.get('price'),
+        备注: formData.get('remark'),
+        链接: formData.get('link'),
+        经度: formData.get('latitude'),
+        纬度: formData.get('longitude')
+      };
+
+      // 发送POST请求将数据插入数据库
+      fetch('/upload', {
+        method: 'POST',
+        body: JSON.stringify(houseData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log('上传成功:', data);
+          uploadFormContainer.style.display = 'none'; // 隐藏上传框
+          // 显示上传成功的提示框
+          const successBox = document.createElement('div');
+          successBox.classList.add('message-box');
+          successBox.innerHTML = `
+          <div class="message-box-content">
+            <h3>上传成功</h3>
+            <p>您的房源已成功上传！</p>
+            <button class="confirm-button">确认</button>
+          </div>
+        `;
+          document.body.appendChild(successBox);
+
+          // 点击确认按钮关闭消息框
+          const confirmButton = successBox.querySelector('.confirm-button');
+          confirmButton.addEventListener('click', () => {
+            document.body.removeChild(successBox);
+          });
+
+          // // 刷新页面或更新房源数据列表等操作
+          // location.reload();
+        })
+        .catch(error => {
+          console.error('上传失败:', error);
+          // 处理上传失败的情况
+        });
+    });
+  </script>
+
+</body>
+
+</html>
